@@ -1,0 +1,5 @@
+weights/
+logs/
+dataset/PASCAL-Part\ Dataset/
+dataset/trainval/images/
+dataset/trainval/masks/
