@@ -62,7 +62,7 @@ for activity in activities:
         # Create masks from the polygons:
         mask_idx = 0
         for mask_class, mask_class_coordinates in elem["Label"].items():
-            if mask_class in ["Doing crunches hands", "Leg", "Floor"]:
+            if mask_class in ["Dumbells", "Doing crunches hands", "Leg", "Floor"]:
                 continue
             for poly_coord in mask_class_coordinates:
                 #print("poly_coord:", poly_coord)
