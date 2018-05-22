@@ -25,7 +25,7 @@ class ActivityConfig(Config):
 
     # Number of classes (including background)
     #NUM_CLASSES = 1 + 1  # Background + balloon
-    NUM_CLASSES = 14
+    NUM_CLASSES = 15
 
     # Number of training steps per epoch
     STEPS_PER_EPOCH = 100
@@ -40,7 +40,7 @@ class ActivityDataset(utils.Dataset):
         # Add classes:
         self.classes_names = ["Dumbells", "Crunches mat", "Aerobic Step",
                    "Uneven bars", "Bar", "Pommel horse", "elliptical training machine", "Balance Beam",
-                   "Rowing machine", "Handle", "Rope", "Bicycle", "Parallel bars"]
+                   "Rowing machine", "Handle", "Rope", "Bicycle", "Parallel bars", "Bars"]
                    #"head", "torso", "larm", "rarm", "lleg", "rleg"]
 
         for idx, c in enumerate(self.classes_names):
@@ -96,10 +96,10 @@ def train(model):
     dataset_train.prepare()
 
     # Validation dataset
-    #dataset_val = ActivityDataset()
-    #dataset_val.load_activity("dataset/trainval/val.json")
-    #dataset_val.prepare()
-    dataset_val = dataset_train
+    dataset_val = ActivityDataset()
+    dataset_val.load_activity("dataset/trainval/val.json")
+    dataset_val.prepare()
+    #dataset_val = dataset_train
 
     # *** This training schedule is an example. Update to your needs ***
     # Since we're using a very small dataset, and starting from
