@@ -1,4 +1,4 @@
-weights/
+weights/mask_rcnn_coco.h5
 logs/
 dataset/PASCAL-Part\ Dataset/
 dataset/trainval/images/
