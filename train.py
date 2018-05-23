@@ -11,6 +11,7 @@ from mrcnn import model as modellib, utils
 
 from mrcnn.config import Config
 
+import common
 
 class ActivityConfig(Config):
     """Configuration for training on the toy  dataset.
@@ -25,7 +26,7 @@ class ActivityConfig(Config):
 
     # Number of classes (including background)
     #NUM_CLASSES = 1 + 1  # Background + balloon
-    NUM_CLASSES = 1 + 13
+    NUM_CLASSES = 1 + common.ACTIVITY_NUM_CLASSES
 
     # Number of training steps per epoch
     STEPS_PER_EPOCH = 100
@@ -37,13 +38,7 @@ class ActivityDataset(utils.Dataset):
 
     def load_activity(self, dataset_json_path):
 
-        # Add classes:
-        self.classes_names = ["Crunches mat", "Aerobic Step",
-                   "Uneven bars", "Bar", "Pommel horse", "elliptical training machine", "Balance Beam",
-                   "Rowing machine", "Handle", "Rope", "Bicycle", "Parallel bars", "Bars"]
-                   #"head", "torso", "larm", "rarm", "lleg", "rleg"]
-
-        for idx, c in enumerate(self.classes_names):
+        for idx, c in enumerate(common.activity_classes_names):
             self.add_class("activityobj", idx+1, c)
 
         with open(dataset_json_path) as dataset_json_file:
@@ -59,7 +54,7 @@ class ActivityDataset(utils.Dataset):
                            path=image_path,
                            width=width, height=height)
 
-    def load_mask(self, image_id):
+    def load_mask(self, image_id, coco_offset=0):
         """Generate instance masks for an image.
        Returns:
         masks: A bool array of shape [height, width, instance count] with
@@ -74,7 +69,7 @@ class ActivityDataset(utils.Dataset):
         for idx, (mask_path, mask_info) in enumerate(self.json_data[info["id"]].items()):
             mask_class = mask_info["class"]
             mask[:,:,idx] = np.array(PIL.Image.open(mask_path), dtype=np.uint8)
-            lbls[idx] = self.classes_names.index(mask_class) + 1
+            lbls[idx] = common.activity_classes_names.index(mask_class) + 1 + coco_offset
 
         # Return mask, and array of class IDs of each instance. Since we have
         # one class ID only, we return an array of 1s
