@@ -1,5 +1,6 @@
 weights/mask_rcnn_coco.h5
 logs/
 dataset/PASCAL-Part\ Dataset/
-dataset/trainval/images/
-dataset/trainval/masks/
+dataset/trainval/
+dataset/coco/
+__pycache__/
