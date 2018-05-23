@@ -48,19 +48,25 @@ import urllib.request
 import shutil
 
 # Root directory of the project
-ROOT_DIR = os.path.abspath("../../")
+#ROOT_DIR = os.path.abspath("../../")
 
 # Import Mask RCNN
-sys.path.append(ROOT_DIR)  # To find local version of the library
+#sys.path.append(ROOT_DIR)  # To find local version of the library
+sys.path.append("third_party/Mask_RCNN/") # To find local version of the library
 from mrcnn.config import Config
 from mrcnn import model as modellib, utils
 
+import common
+from train import ActivityDataset
+
 # Path to trained weights file
-COCO_MODEL_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
+#COCO_MODEL_PATH = os.path.join(ROOT_DIR, "weights/mask_rcnn_coco.h5")
+COCO_MODEL_PATH = "weights/mask_rcnn_coco.h5"
 
 # Directory to save logs and model checkpoints, if not provided
 # through the command line argument --logs
-DEFAULT_LOGS_DIR = os.path.join(ROOT_DIR, "logs")
+#DEFAULT_LOGS_DIR = os.path.join(ROOT_DIR, "logs")
+DEFAULT_LOGS_DIR = "logs"
 DEFAULT_DATASET_YEAR = "2014"
 
 ############################################################
@@ -68,7 +74,7 @@ DEFAULT_DATASET_YEAR = "2014"
 ############################################################
 
 
-class CocoConfig(Config):
+class ExtendedCocoConfig(Config):
     """Configuration for training on MS COCO.
     Derives from the base Config class and overrides values specific
     to the COCO dataset.
@@ -84,14 +90,14 @@ class CocoConfig(Config):
     # GPU_COUNT = 8
 
     # Number of classes (including background)
-    NUM_CLASSES = 1 + 80  # COCO has 80 classes
+    NUM_CLASSES = 1 + common.COCO_NUM_CLASSES + common.ACTIVITY_NUM_CLASSES
 
 
 ############################################################
 #  Dataset
 ############################################################
 
-class CocoDataset(utils.Dataset):
+class ExtendedCocoDataset(ActivityDataset):
     def load_coco(self, dataset_dir, subset, year=DEFAULT_DATASET_YEAR, class_ids=None,
                   class_map=None, return_coco=False, auto_download=False):
         """Load a subset of the COCO dataset.
@@ -122,7 +128,7 @@ class CocoDataset(utils.Dataset):
         if class_ids:
             image_ids = []
             for id in class_ids:
-                image_ids.extend(list(coco.getImgIds(catIds=[id])))
+                image_ids.extend(list(coco.getImgIds(catIds=[id]))[:10])
             # Remove duplicates
             image_ids = list(set(image_ids))
         else:
@@ -232,7 +238,7 @@ class CocoDataset(utils.Dataset):
         # If not a COCO image, delegate to parent class.
         image_info = self.image_info[image_id]
         if image_info["source"] != "coco":
-            return super(CocoDataset, self).load_mask(image_id)
+            return super(ExtendedCocoDataset, self).load_mask(image_id, common.COCO_NUM_CLASSES) # NOTE: this calls ActivityDataset.load_mask()
 
         instance_masks = []
         class_ids = []
@@ -438,9 +444,9 @@ if __name__ == '__main__':
 
     # Configurations
     if args.command == "train":
-        config = CocoConfig()
+        config = ExtendedCocoConfig()
     else:
-        class InferenceConfig(CocoConfig):
+        class InferenceConfig(ExtendedCocoConfig):
             # Set batch size to 1 since we'll be running inference on
             # one image at a time. Batch size = GPU_COUNT * IMAGES_PER_GPU
             GPU_COUNT = 1
@@ -471,20 +477,25 @@ if __name__ == '__main__':
 
     # Load weights
     print("Loading weights ", model_path)
-    model.load_weights(model_path, by_name=True)
+    #model.load_weights(model_path, by_name=True)
+    model.load_weights(model_path, by_name=True, exclude=[
+        "mrcnn_class_logits", "mrcnn_bbox_fc",
+        "mrcnn_bbox", "mrcnn_mask"])
 
     # Train or evaluate
     if args.command == "train":
         # Training dataset. Use the training set and 35K from the
         # validation set, as as in the Mask RCNN paper.
-        dataset_train = CocoDataset()
+        dataset_train = ExtendedCocoDataset()
         dataset_train.load_coco(args.dataset, "train", year=args.year, auto_download=args.download)
         dataset_train.load_coco(args.dataset, "valminusminival", year=args.year, auto_download=args.download)
+        dataset_train.load_activity("dataset/trainval/train.json")
         dataset_train.prepare()
 
         # Validation dataset
-        dataset_val = CocoDataset()
+        dataset_val = ExtendedCocoDataset()
         dataset_val.load_coco(args.dataset, "minival", year=args.year, auto_download=args.download)
+        dataset_val.load_activity("dataset/trainval/val.json")
         dataset_val.prepare()
 
         # Image Augmentation
@@ -521,8 +532,9 @@ if __name__ == '__main__':
 
     elif args.command == "evaluate":
         # Validation dataset
-        dataset_val = CocoDataset()
+        dataset_val = ExtendedCocoDataset()
         coco = dataset_val.load_coco(args.dataset, "minival", year=args.year, return_coco=True, auto_download=args.download)
+        dataset_val.load_activity("dataset/trainval/val.json")
         dataset_val.prepare()
         print("Running COCO evaluation on {} images.".format(args.limit))
         evaluate_coco(model, dataset_val, coco, "bbox", limit=int(args.limit))
