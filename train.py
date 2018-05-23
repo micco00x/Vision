@@ -25,7 +25,7 @@ class ActivityConfig(Config):
 
     # Number of classes (including background)
     #NUM_CLASSES = 1 + 1  # Background + balloon
-    NUM_CLASSES = 14
+    NUM_CLASSES = 1 + 13
 
     # Number of training steps per epoch
     STEPS_PER_EPOCH = 100
