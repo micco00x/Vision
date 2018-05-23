@@ -17,7 +17,7 @@ assert (valdim <= 1.0 and valdim >= 0.0)
 assert (os.path.isfile(dataset))
 
 if not os.path.exists(trainvaldir):
-    os.makedirs(traindir)
+    os.makedirs(trainvaldir)
 
 with open(dataset, 'r') as dfile:
 	print('Reading json dataset')
