@@ -12,10 +12,11 @@ python3 split_data.py
 
 Train the model:
 ~~~~
-python3 train.py
+python3 activity.py train
 ~~~~
 
-Train the extended model which includes COCO:
+Train the extended model which includes COCO (note that there's no need to type
+`--download=True` if the model has already been downloaded previously):
 ~~~~
-python3 train_coco.py --dataset=dataset/coco --model=coco --download=True train
+python3 activity.py train --extended=True --download=True
 ~~~~
