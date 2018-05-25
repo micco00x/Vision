@@ -397,6 +397,25 @@ def evaluate_coco(model, dataset, coco, eval_type="bbox", limit=0, image_ids=Non
     print("Total time: ", time.time() - t_start)
 
 
+def evaluate_extended_coco(model, dataset, config):
+    # Compute VOC-Style mAP @ IoU=0.5
+    # Running on 10 images. Increase for better accuracy.
+    image_ids = np.random.choice(dataset.image_ids, 10)
+    APs = []
+    for image_id in image_ids:
+        # Load image and ground truth data
+        image, image_meta, gt_class_id, gt_bbox, gt_mask = modellib.load_image_gt(dataset, config, image_id, use_mini_mask=False)
+        molded_images = np.expand_dims(modellib.mold_image(image, config), 0)
+        # Run object detection
+        results = model.detect([image], verbose=0)
+        r = results[0]
+        # Compute AP
+        AP, precisions, recalls, overlaps = utils.compute_ap(gt_bbox, gt_class_id, gt_mask,
+                                                             r["rois"], r["class_ids"], r["scores"], r['masks'])
+        APs.append(AP)
+
+    print("mAP: ", np.mean(APs))
+
 ############################################################
 #  Training
 ############################################################
@@ -477,13 +496,13 @@ if __name__ == '__main__':
 
     # Load weights
     print("Loading weights ", model_path)
-    #model.load_weights(model_path, by_name=True)
-    model.load_weights(model_path, by_name=True, exclude=[
-        "mrcnn_class_logits", "mrcnn_bbox_fc",
-        "mrcnn_bbox", "mrcnn_mask"])
 
     # Train or evaluate
     if args.command == "train":
+        model.load_weights(model_path, by_name=True, exclude=[
+            "mrcnn_class_logits", "mrcnn_bbox_fc",
+            "mrcnn_bbox", "mrcnn_mask"])
+
         # Training dataset. Use the training set and 35K from the
         # validation set, as as in the Mask RCNN paper.
         dataset_train = ExtendedCocoDataset()
@@ -531,13 +550,17 @@ if __name__ == '__main__':
                     augmentation=augmentation)
 
     elif args.command == "evaluate":
+        model.load_weights(model_path, by_name=True)
+
         # Validation dataset
         dataset_val = ExtendedCocoDataset()
         coco = dataset_val.load_coco(args.dataset, "minival", year=args.year, return_coco=True, auto_download=args.download)
         dataset_val.load_activity("dataset/trainval/val.json")
         dataset_val.prepare()
         print("Running COCO evaluation on {} images.".format(args.limit))
-        evaluate_coco(model, dataset_val, coco, "bbox", limit=int(args.limit))
+        #evaluate_coco(model, dataset_val, coco, "bbox", limit=int(args.limit))
+        #evaluate_coco(model, dataset, coco, eval_type="bbox", image_ids=dataset_val._image_ids)
+        evaluate_extended_coco(model, dataset_val, config)
     else:
         print("'{}' is not recognized. "
               "Use 'train' or 'evaluate'".format(args.command))
