@@ -72,7 +72,7 @@ for activity in activities:
                     continue
 
                 x = [coord["x"] for coord in poly_coord]
-                y = [coord["y"] for coord in poly_coord]
+                y = [h - 1 - coord["y"] for coord in poly_coord]
 
                 polygon = [{'all_points_y': y, 'name': 'polygon', 'all_points_x': x}]
 
@@ -82,7 +82,6 @@ for activity in activities:
                     rr, cc = skimage.draw.polygon(y, x, shape=(h, w))
                     mask = np.zeros([h, w])
                     mask[rr, cc] = 1
-                    mask = np.flipud(mask)
                     scipy.misc.imsave(mask_path, mask)
 
                 masks_dict[mask_path] = {"class": mask_class, "polygon": polygon}
