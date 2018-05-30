@@ -107,6 +107,9 @@ class ExtendedCocoConfig(Config):
     # Number of classes (including background)
     NUM_CLASSES = 1 + common.COCO_NUM_CLASSES + common.ACTIVITY_NUM_CLASSES
 
+    # Number of training steps per epoch
+    STEPS_PER_EPOCH = 1500
+
 ############################################################
 #  Dataset
 ############################################################
