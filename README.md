@@ -7,7 +7,7 @@ python3 generate_dataset.py
 
 Split the dataset in train and val:
 ~~~~
-python3 split_data.py
+python3 split_data.py --dataset=dataset/trainval/dataset.json
 ~~~~
 
 Train the model:
