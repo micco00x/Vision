@@ -64,7 +64,7 @@ DEFAULT_LOGS_DIR = "logs"
 DEFAULT_DATASET_YEAR = "2014"
 
 COCO_IMAGES_PER_OBJECT = 40
-COCO_MAX_NUM_MASK_PER_IMAGE = 4
+COCO_MAX_NUM_MASK_PER_IMAGE = 3
 
 ############################################################
 #  Configurations
@@ -86,7 +86,7 @@ class ActivityConfig(Config):
     NUM_CLASSES = 1 + common.ACTIVITY_NUM_CLASSES
 
     # Number of training steps per epoch
-    STEPS_PER_EPOCH = 100
+    STEPS_PER_EPOCH = 1000
 
     # Skip detections with < 90% confidence
     DETECTION_MIN_CONFIDENCE = 0.9
@@ -110,7 +110,7 @@ class ExtendedCocoConfig(Config):
     NUM_CLASSES = 1 + common.COCO_NUM_CLASSES + common.ACTIVITY_NUM_CLASSES
 
     # Number of training steps per epoch
-    STEPS_PER_EPOCH = 1500
+    STEPS_PER_EPOCH = 1000
 
 ############################################################
 #  Dataset
