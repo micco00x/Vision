@@ -63,7 +63,8 @@ COCO_MODEL_PATH = "weights/mask_rcnn_coco.h5"
 DEFAULT_LOGS_DIR = "logs"
 DEFAULT_DATASET_YEAR = "2014"
 
-COCO_IMAGES_PER_OBJECT = 46
+COCO_IMAGES_PER_OBJECT = 40
+COCO_MAX_NUM_MASK_PER_IMAGE = 4
 
 ############################################################
 #  Configurations
@@ -191,7 +192,16 @@ class ExtendedCocoDataset(ActivityDataset):
         if class_ids:
             image_ids = []
             for id in class_ids:
-                image_ids.extend(list(coco.getImgIds(catIds=[id]))[:COCO_IMAGES_PER_OBJECT])
+                imgs = [] # list of images to add to image_ids
+                # Select at most COCO_IMAGES_PER_OBJECT and select only the images
+                # that have at most COCO_MAX_NUM_MASK_PER_IMAGE masks inside them:
+                for imgid in list(coco.getImgIds(catIds=[id])):
+                    if len(imgs) >= COCO_IMAGES_PER_OBJECT:
+                        break
+                    if len(coco.loadAnns(coco.getAnnIds(imgIds=[imgid], catIds=class_ids, iscrowd=None))) <= COCO_MAX_NUM_MASK_PER_IMAGE:
+                        imgs.append(imgid)
+                image_ids.extend(imgs)
+                #image_ids.extend(list(coco.getImgIds(catIds=[id]))[:COCO_IMAGES_PER_OBJECT])
             # Remove duplicates
             image_ids = list(set(image_ids))
         else:
