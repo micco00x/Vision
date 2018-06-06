@@ -5,7 +5,7 @@ import os
 
 parser = argparse.ArgumentParser(description='Splitting json dataset')
 parser.add_argument('--dataset', dest='dataset', type=str, required=True, help='path of the dataset json file')
-parser.add_argument('--valdim', dest='valdim', type=float, default=0.2, help='dimension of the validation set')
+parser.add_argument('--valdim', dest='valdim', type=float, default=0.1, help='dimension of the validation set')
 parser.add_argument("--trainvaldir", dest="traindir", type=str, default="dataset/trainval/", help="Trainval folder")
 args = parser.parse_args()
 
