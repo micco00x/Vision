@@ -63,6 +63,7 @@ COCO_MODEL_PATH = "weights/mask_rcnn_coco.h5"
 DEFAULT_LOGS_DIR = "logs"
 DEFAULT_DATASET_YEAR = "2014"
 
+COCO_IMAGES_PER_OBJECT = 46
 
 ############################################################
 #  Configurations
@@ -156,7 +157,7 @@ class ActivityDataset(utils.Dataset):
         return mask.astype(np.bool), lbls
 
 class ExtendedCocoDataset(ActivityDataset):
-    def load_coco(self, dataset_dir, subset, year=DEFAULT_DATASET_YEAR, class_ids=None,
+    def load_coco(self, dataset_dir, subset, year=DEFAULT_DATASET_YEAR, class_ids=None, class_names=None,
                   class_map=None, return_coco=False, auto_download=False):
         """Load a subset of the COCO dataset.
         dataset_dir: The root directory of the COCO dataset.
@@ -177,6 +178,10 @@ class ExtendedCocoDataset(ActivityDataset):
             subset = "val"
         image_dir = "{}/{}{}".format(dataset_dir, subset, year)
 
+        # Select class_ids from class_names:
+        if class_names:
+            class_ids = sorted(coco.getCatIds(catNms=class_names))
+
         # Load all classes or a subset?
         if not class_ids:
             # All classes
@@ -186,7 +191,7 @@ class ExtendedCocoDataset(ActivityDataset):
         if class_ids:
             image_ids = []
             for id in class_ids:
-                image_ids.extend(list(coco.getImgIds(catIds=[id]))[:10])
+                image_ids.extend(list(coco.getImgIds(catIds=[id]))[:COCO_IMAGES_PER_OBJECT])
             # Remove duplicates
             image_ids = list(set(image_ids))
         else:
@@ -199,13 +204,13 @@ class ExtendedCocoDataset(ActivityDataset):
 
         # Add images
         for i in image_ids:
+            #print(len(coco.loadAnns(coco.getAnnIds(imgIds=[i], catIds=class_ids, iscrowd=None))))
             self.add_image(
                 "coco", image_id=i,
                 path=os.path.join(image_dir, coco.imgs[i]['file_name']),
                 width=coco.imgs[i]["width"],
                 height=coco.imgs[i]["height"],
-                annotations=coco.loadAnns(coco.getAnnIds(
-                    imgIds=[i], catIds=class_ids, iscrowd=None)))
+                annotations=coco.loadAnns(coco.getAnnIds(imgIds=[i], catIds=class_ids, iscrowd=None)))
         if return_coco:
             return coco
 
@@ -506,8 +511,8 @@ if __name__ == '__main__':
         # validation set, as as in the Mask RCNN paper.
         if args.extended:
             dataset_train = ExtendedCocoDataset()
-            dataset_train.load_coco(args.coco_dataset, "train", year=args.year, auto_download=args.download)
-            dataset_train.load_coco(args.coco_dataset, "valminusminival", year=args.year, auto_download=args.download)
+            dataset_train.load_coco(args.coco_dataset, "train", year=args.year, auto_download=args.download, class_names=common.coco_classes)
+            dataset_train.load_coco(args.coco_dataset, "valminusminival", year=args.year, auto_download=args.download, class_names=common.coco_classes)
         else:
             dataset_train = ActivityDataset()
         dataset_train.load_activity(args.activity_dataset + "train.json")
@@ -516,7 +521,7 @@ if __name__ == '__main__':
         # Validation dataset
         if args.extended:
             dataset_val = ExtendedCocoDataset()
-            dataset_val.load_coco(args.coco_dataset, "minival", year=args.year, auto_download=args.download)
+            dataset_val.load_coco(args.coco_dataset, "minival", year=args.year, auto_download=args.download, class_names=common.coco_classes)
         else:
             dataset_val = ActivityDataset()
         dataset_val.load_activity(args.activity_dataset + "val.json")
@@ -560,7 +565,7 @@ if __name__ == '__main__':
         # Validation dataset
         if args.extended:
             dataset_val = ExtendedCocoDataset()
-            dataset_val.load_coco(args.coco_dataset, "minival", year=args.year, return_coco=True, auto_download=args.download)
+            dataset_val.load_coco(args.coco_dataset, "minival", year=args.year, return_coco=True, auto_download=args.download, class_names=common.coco_classes)
         else:
             dataset_val = ActivityDataset()
         dataset_val.load_activity(args.activity_dataset + "val.json")
