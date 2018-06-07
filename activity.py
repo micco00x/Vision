@@ -112,6 +112,20 @@ class ExtendedCocoConfig(Config):
     # Number of training steps per epoch
     STEPS_PER_EPOCH = 1000
 
+class ActivityInferenceConfig(ActivityConfig):
+    # Set batch size to 1 since we'll be running inference on
+    # one image at a time. Batch size = GPU_COUNT * IMAGES_PER_GPU
+    GPU_COUNT = 1
+    IMAGES_PER_GPU = 1
+    DETECTION_MIN_CONFIDENCE = 0
+
+class ExtendedInferenceConfig(ExtendedCocoConfig):
+    # Set batch size to 1 since we'll be running inference on
+    # one image at a time. Batch size = GPU_COUNT * IMAGES_PER_GPU
+    GPU_COUNT = 1
+    IMAGES_PER_GPU = 1
+    DETECTION_MIN_CONFIDENCE = 0
+
 ############################################################
 #  Dataset
 ############################################################
@@ -476,20 +490,6 @@ if __name__ == '__main__':
         else:
             config = ActivityConfig()
     else:
-        class ActivityInferenceConfig(ActivityConfig):
-            # Set batch size to 1 since we'll be running inference on
-            # one image at a time. Batch size = GPU_COUNT * IMAGES_PER_GPU
-            GPU_COUNT = 1
-            IMAGES_PER_GPU = 1
-            DETECTION_MIN_CONFIDENCE = 0
-
-        class ExtendedInferenceConfig(ExtendedCocoConfig):
-            # Set batch size to 1 since we'll be running inference on
-            # one image at a time. Batch size = GPU_COUNT * IMAGES_PER_GPU
-            GPU_COUNT = 1
-            IMAGES_PER_GPU = 1
-            DETECTION_MIN_CONFIDENCE = 0
-
         if args.extended:
             config = ExtendedInferenceConfig()
         else:
@@ -508,9 +508,6 @@ if __name__ == '__main__':
     elif args.model.lower() == "last":
         # Find last trained weights
         model_path = model.find_last()[1]
-    elif args.model.lower() == "imagenet":
-        # Start from ImageNet trained weights
-        model_path = model.get_imagenet_weights()
     else:
         model_path = args.model
 
