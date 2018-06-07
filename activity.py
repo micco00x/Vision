@@ -393,6 +393,7 @@ class ExtendedCocoDataset(ActivityDataset):
 def evaluate(model, dataset, config):
     # Compute VOC-Style mAP @ IoU=0.5
     APs = []
+    cnt = 0
     for image_id in dataset.image_ids:
         # Load image and ground truth data
         image, image_meta, gt_class_id, gt_bbox, gt_mask = modellib.load_image_gt(dataset, config, image_id, use_mini_mask=False)
@@ -405,6 +406,11 @@ def evaluate(model, dataset, config):
                                                              r["rois"], r["class_ids"], r["scores"], r['masks'])
         APs.append(AP)
 
+        # Printing the progress while evaluating the model:
+        cnt = cnt + 1
+        print("Progress: {:2.1%}".format(cnt / len(dataset.image_ids)), end="\r")
+
+    print("Evaluation completed.")
     print("mAP: ", np.mean(APs))
 
 ############################################################
