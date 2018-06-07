@@ -20,3 +20,8 @@ Train the extended model which includes COCO (note that there's no need to type
 ~~~~
 python3 activity.py train --extended=True --download=True
 ~~~~
+
+Evaluate the last trained model on the extended dataset:
+~~~~
+python3 activity.py evaluate --extended=True --model=last
+~~~~
