@@ -110,7 +110,7 @@ class ExtendedCocoConfig(Config):
     NUM_CLASSES = 1 + common.COCO_NUM_CLASSES + common.ACTIVITY_NUM_CLASSES
 
     # Number of training steps per epoch
-    STEPS_PER_EPOCH = 1000
+    STEPS_PER_EPOCH = 1500
 
 class ActivityInferenceConfig(ActivityConfig):
     # Set batch size to 1 since we'll be running inference on
@@ -553,7 +553,7 @@ if __name__ == '__main__':
         print("Training network heads")
         model.train(dataset_train, dataset_val,
                     learning_rate=config.LEARNING_RATE,
-                    epochs=30,
+                    epochs=35,
                     layers='heads',
                     augmentation=augmentation)
 
@@ -562,7 +562,7 @@ if __name__ == '__main__':
         print("Fine tune Resnet stage 4 and up")
         model.train(dataset_train, dataset_val,
                     learning_rate=config.LEARNING_RATE,
-                    epochs=50,
+                    epochs=65,
                     layers='4+',
                     augmentation=augmentation)
 
@@ -571,7 +571,7 @@ if __name__ == '__main__':
         print("Fine tune all layers")
         model.train(dataset_train, dataset_val,
                     learning_rate=config.LEARNING_RATE / 10,
-                    epochs=70,
+                    epochs=80,
                     layers='all',
                     augmentation=augmentation)
 
