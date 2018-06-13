@@ -125,7 +125,41 @@
 
 \section{Introduction}
 
-Introduction\cite{he2017maskrcnn}.
+The aim of the project is to train a model based on Mask R-CNN\cite{he2017maskrcnn}
+using an extended version of COCO that includes the dataset created on Labelbox.
+The new dataset consists on a bunch of images that shows the Gymnastic activities
+of ActivityNet. All the images have been downloaded from Google using a Python
+tool called \texttt{google-images-download}. The idea is to have a working model that
+will be later used to classify videos that show Gymnastic activities.
+
+The project has been developed in Python and it has been tested using Google
+Compute Engine. The final training has been performed at Alcor lab.
+
+Results. Problem of the network. Peaks. How to improve.
+
+%-------------------------------------------------------------------------------
+
+\section{Training}
+
+Mask R-CNN has a set of losses that are used to check the performances of the
+classification, the RPN, the regression on the bounding boxes and the instance
+segmentation:
+\begin{itemize}
+    \item \texttt{smooth\_l1\_loss}: the smooth-L1 loss on the classification of the
+        objects.
+    \item \texttt{rpn\_class\_loss}: the loss on the classification of the
+        object contained in the region proposals, they can either be foreground
+        if there is an object inside or background otherwise.
+    \item \texttt{rpn\_bbox\_loss}: the loss on the bounding box returned by the RPN.
+    \item \texttt{mrcnn\_class\_loss}: the loss for the classifier head of Mask
+        R-CNN.
+    \item \texttt{mrcnn\_bbox\_loss}: the loss for the bounding box refinement
+        at the end of the network.
+    \item \texttt{mrcnn\_mask\_loss}: the binary cross-entropy loss for the masks.
+\end{itemize}
+
+It is possible to see the graphs of these losses using tensorboard once the
+training is complete.
 
 %-------------------------------------------------------------------------------
 
