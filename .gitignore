@@ -3,5 +3,9 @@ logs/
 dataset/PASCAL-Part\ Dataset/
 dataset/trainval/
 dataset/coco/
+images/
+videos/
+masked_videos/
+cocoapi/
 __pycache__/
 .ipynb_checkpoints/
