@@ -1,5 +1,15 @@
 # Vision
 
+Clone the repository:
+~~~~
+git clone https://github.com/micco00x/Vision
+~~~~
+
+Initialize submodules:
+~~~~
+git submodule update --init
+~~~~
+
 Generate the dataset:
 ~~~~
 python3 generate_dataset.py
@@ -10,7 +20,7 @@ Split the dataset in train and val:
 python3 split_data.py --dataset=dataset/trainval/dataset.json
 ~~~~
 
-Train the model:
+Train the model (not necessary for the next steps):
 ~~~~
 python3 activity.py train
 ~~~~
@@ -24,4 +34,17 @@ python3 activity.py train --extended=True --download=True
 Evaluate the last trained model on the extended dataset:
 ~~~~
 python3 activity.py evaluate --extended=True --model=last
+~~~~
+
+Generate the dataset that will be used to train the LSTM (considering
+that the videos are in `dataset/activitynet/Gymnastics/` and that the
+frames will be saved in `dataset/activitynet/Frames`):
+~~~~
+python3 LSTM/extractFrames.py --videofolder=dataset/activitynet/Gymnastics/ --framesfolder=dataset/activitynet/Frames
+~~~~
+
+Split the video dataset in train and val (considering that the frames are
+in `dataset/activitynet/Frames):
+~~~~
+python3 LSTM/splitDataset.py --framesfolder=dataset/activitynet/Frames
 ~~~~
