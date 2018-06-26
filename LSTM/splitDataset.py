@@ -3,10 +3,17 @@ import sys
 import random
 from sklearn.model_selection import train_test_split
 import pickle
+import argparse
 
-framesFolder = "Frames"
+# Parse arguments from command line:
+parser = argparse.ArgumentParser(description="Extract frames from a set of videos and create a dataset")
+parser.add_argument("--trainingsize", required=False, default=0.8, help="Size of the training set (default=0.8)")
+parser.add_argument("--framesfolder", required=False, default="Frames", help="Folder that will contain frames (default=Frames)")
+args = parser.parse_args()
+
+framesFolder = args.framesfolder
 filesList = []
-trainingSize = .8
+trainingSize = args.trainingsize
 
 # create folder Frames
 if not os.path.exists(framesFolder):
@@ -23,7 +30,7 @@ for f in folders:
         filesList.append(framesFolder + "/" + f + "/" + file)
 
 random.shuffle(filesList)
-train, test = train_test_split(filesList, train_size = trainingSize)
+train, test = train_test_split(filesList, train_size=trainingSize)
 
 f = open(framesFolder + '/train.txt', 'w')
 f.write("\n".join(train))
