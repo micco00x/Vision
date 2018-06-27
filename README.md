@@ -44,7 +44,13 @@ python3 LSTM/extractFrames.py --videofolder=dataset/activitynet/Gymnastics/ --fr
 ~~~~
 
 Split the video dataset in train and val (considering that the frames are
-in `dataset/activitynet/Frames):
+in `dataset/activitynet/Frames`):
 ~~~~
 python3 LSTM/splitDataset.py --framesfolder=dataset/activitynet/Frames
+~~~~
+
+Train the model to recognize activites from videos (as before, considering
+the same path for the frames of the videos):
+~~~~
+python3 train_videos.py --dataset=dataset/activitynet/Frames/train.txt --model=weights/mask_rcnn_coco_0080.h5
 ~~~~
