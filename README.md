@@ -54,3 +54,10 @@ the same path for the frames of the videos):
 ~~~~
 python3 train_videos.py --dataset=dataset/activitynet/Frames/train.txt --model=weights/mask_rcnn_coco_0080.h5
 ~~~~
+
+Notice that after the first training the program generates a ``.npz`` file
+that stores the tensors used for the training. Hence, it is possible to train
+skipping the generation of the tensors:
+~~~~
+python3 train_videos.py --npz=dataset/activitynet/Frames/train.npz
+~~~~
