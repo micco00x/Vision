@@ -1,6 +1,8 @@
 import MaskExam as msk
 import numpy as np
 import argparse
+import datetime
+import time
 import cv2
 import os
 
@@ -24,6 +26,9 @@ if output_video == None:
 	output_video = 'masked_' + input_name + '.mp4'
 	
 output_video = os.path.join(output_folder, output_video)
+
+if not os.path.exists(output_folder):
+	os.makedirs(output_folder)
 
 if os.path.isfile(output_video):
 	print("Output file already exists. Overwrite? Y,[n]")
@@ -56,18 +61,25 @@ _, _ = vidcap.read() #first read to reach first frame
 success = True
 
 n_frame = 0
+last_time = int(time.time())
 while success:    
 	success, image = vidcap.read()
 	
+	n_frame += 1
 	if n_frame < start_frame or not success:
 		continue
 	
-	mask_frame = msk.apply_masks(image)
+	mask_frame = msk.apply_masks(image, mask_threshold=0.9)
 	video.write(np.uint8(mask_frame))
 	
-	n_frame += 1
+	steptime = int(time.time()) - last_time
+	last_time = steptime + last_time
+	time_to_end = steptime * (end_frame - n_frame)
+	str_time_to_end =  str(datetime.timedelta(seconds=time_to_end))
 	
-	print("Computing masked frames: {:.2f}%".format((n_frame-start_frame)/(end_frame-start_frame) * 100), end='\r')
+	completeness = (n_frame-start_frame)/(end_frame-start_frame) * 100
+	
+	print("Computing masked frames: {:.2f}%    Time left: {}".format(completeness, str_time_to_end), end='\r')
 	
 	if n_frame == end_frame:
 		break

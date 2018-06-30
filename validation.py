@@ -113,8 +113,6 @@ for json_elem in b:
 		centroidi_lista = []
 		aree = []
 		max_coord = []
-		#for i in seg.keys():
-		#	name = str(i)
 		class_id_name = common.all_classes.index(name)
 
 		idClassi.append(classes.get(name))
