@@ -52,12 +52,12 @@ python3 LSTM/splitDataset.py --framesfolder=dataset/activitynet/Frames
 Train the model to recognize activites from videos (as before, considering
 the same path for the frames of the videos):
 ~~~~
-python3 train_videos.py --dataset=dataset/activitynet/Frames/train.txt --model=weights/mask_rcnn_coco_0080.h5
+python3 train_videos.py --train_dataset=dataset/activitynet/Frames/train.txt --val_dataset=dataset/activitynet/Frames/test.txt --model=weights/mask_rcnn_coco_0080.h5
 ~~~~
 
 Notice that after the first training the program generates a ``.npz`` file
 that stores the tensors used for the training. Hence, it is possible to train
 skipping the generation of the tensors:
 ~~~~
-python3 train_videos.py --npz=dataset/activitynet/Frames/train.npz
+python3 train_videos.py --train_npz=dataset/activitynet/Frames/train.npz --val_npz=dataset/activitynet/Frames/val.npz
 ~~~~
