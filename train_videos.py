@@ -7,6 +7,7 @@ import os
 import natsort
 import tensorflow as tf
 import time
+import math
 
 sys.path.append("third_party/Mask_RCNN/") # To find local version of the library
 from mrcnn import model as modellib
@@ -127,7 +128,6 @@ parser.add_argument("--model", required="--dataset" in sys.argv,
 parser.add_argument("--batch_size", default=32, type=int, help="Size of the batch for the LSTM (default=32)")
 parser.add_argument("--learning_rate", default=1e-3, type=float, help="Learning rate for the RMSProp optimizer (default=1e-3)")
 parser.add_argument("--epochs", default=10, type=int, help="Number of epochs to train the LSTM (default=10)")
-parser.add_argument("--training_iters", default=100, type=int, help="Number of iterations per epoch (default=100)")
 parser.add_argument("--lstm_hidden", default=256, type=int, help="Size of the hidden layer for the LSTM")
 args = parser.parse_args()
 
@@ -155,18 +155,17 @@ videos = videos.astype(np.float32) / 255
 #print("Checking videos are in range [0,1]:", (0 <= videos).all() and (videos <= 1).all())
 
 # LSTM hyperparameters:
-batch_size = args.batch_size
 lstm_hidden = args.lstm_hidden
 num_classes = len(set(videos_y))
 learning_rate = args.learning_rate
-training_iters = args.training_iters
 epochs = args.epochs
 
 # Train the LSTM on the dataset:
 with tf.Session() as sess:
     # Input (videos' frames) and output (indices) of the network:
-    X = tf.placeholder(tf.float32, shape=[batch_size] + list(videos.shape[1:]))
-    y = tf.placeholder(tf.uint8, shape=[batch_size] + list(videos_y.shape[1:]))
+    X = tf.placeholder(tf.float32, shape=[None] + list(videos.shape[1:]))
+    y = tf.placeholder(tf.uint8, shape=[None] + list(videos_y.shape[1:]))
+    batch_size = tf.shape(X)[0]
 
     # Reshape and unstack the input so that it can be fed to the LSTM:
     # Reshape X to [batch_size, num frames, width*height*channels] and then
@@ -195,23 +194,54 @@ with tf.Session() as sess:
     accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
     # TensorBoard:
-    tf.summary.scalar("loss", loss)
-    tf.summary.scalar("accuracy", accuracy)
-    merged = tf.summary.merge_all()
     train_writer = tf.summary.FileWriter("logs/lstm" + time.strftime("%Y%m%dT%H%M"), sess.graph)
 
     # Initialize the graph:
     tf.global_variables_initializer().run()
 
     # Train the network:
+    step = 0
     for epoch in range(epochs):
         print("Epoch {}/{}:".format(epoch+1, epochs))
-        for training_iter in range(training_iters):
-            rand_idx = np.random.randint(videos.shape[0], size=batch_size)
+        new_indices = np.random.randint(videos.shape[0], size=videos.shape[0])
+
+        # Let mu_i = vloss for each iteration, let's say the iteration is N,
+        # bs is the batch_size of the current iteration,
+        # sum_loss = mu_1 + mu_2 + ... + mu_N,
+        # tot_loss = (args.batch_size * sum_loss + bs * mu_{N+1}) / (N * args.batch_size + bs).
+        # The same thing applies for sum_accuracy and tot_accuracy.
+        # NOTE: distinguish between args.batch_size and bs is important in order to
+        # consider the right number of elements for each iteration:
+        N = 0
+        sum_loss = 0
+        tot_loss = 0
+        sum_accuracy = 0
+        tot_accuracy = 0
+
+        # Iterate through the dataset using new_indices (random shuffle):
+        for idx in range(0, videos.shape[0], args.batch_size):
+            # Extract the following args.batch_size indices and perform a training step:
+            L = min(idx+args.batch_size, videos.shape[0])
+            rand_idx = new_indices[idx:L]
             minibatch_X = videos[rand_idx,:,:,:,:]
             minibatch_y = videos_y[rand_idx]
-            vloss, vaccuracy, _ = sess.run([loss, accuracy, train_step], feed_dict={X: minibatch_X, y: minibatch_y})
-            print("Progress: {}/{} - Loss: {:2.3} - Accuracy: {:2.3}".format((training_iter+1), training_iters, vloss, vaccuracy), end="\r")
-            summary, _ = sess.run([merged, train_step], feed_dict={X: minibatch_X, y: minibatch_y})
-            train_writer.add_summary(summary, training_iters * epoch + training_iter)
-        print("Progress: {}/{} - Loss: {:2.3} - Accuracy: {:2.3}".format((training_iter+1), training_iters, vloss, vaccuracy))
+            vloss, vaccuracy, bs, _ = sess.run([loss, accuracy, batch_size, train_step], feed_dict={X: minibatch_X, y: minibatch_y})
+
+            # Update tot_loss and tot_accuracy:
+            N = N + 1
+            tot_loss = (args.batch_size * sum_loss + bs * vloss) / (N * args.batch_size + bs)
+            sum_loss = sum_loss + vloss
+            tot_accuracy = (args.batch_size * sum_accuracy + bs * vaccuracy) / (N * args.batch_size + bs)
+            sum_accuracy = sum_accuracy + vaccuracy
+
+            # Update tot_loss and tot_accuracy and log to TensorBoard:
+            # TODO: move this inside the graph.
+            step = step + 1
+            summary = tf.Summary(value=[tf.Summary.Value(tag="loss", simple_value=tot_loss)])
+            train_writer.add_summary(summary, step)
+            summary = tf.Summary(value=[tf.Summary.Value(tag="accuracy", simple_value=tot_accuracy)])
+            train_writer.add_summary(summary, step)
+
+            print("Progress: {}/{} - Loss: {:2.3} - Accuracy: {:2.3}".format(L, videos.shape[0], tot_loss, tot_accuracy), end="\r")
+            sess.run(train_step, feed_dict={X: minibatch_X, y: minibatch_y})
+        print("Progress: {}/{} - Loss: {:2.3} - Accuracy: {:2.3}".format(videos.shape[0], videos.shape[0], tot_loss, tot_accuracy))
