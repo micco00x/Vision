@@ -38,7 +38,7 @@ class InferenceConfig(activity.ExtendedCocoConfig):
 	GPU_COUNT = 1
 	IMAGES_PER_GPU = 1
 
-	DETECTION_MIN_CONFIDENCE = 0.6
+	DETECTION_MIN_CONFIDENCE = 0.9
 	a = common.activity_classes_names + common.coco_classes
 	NUM_CLASSES = 1+len(a)
 
@@ -87,7 +87,7 @@ def generate_class_colors():
 	return colors
 	
 
-def process_masked_image(image, boxes, masks, class_ids, class_names, scores=None,
+def process_masked_image(image, boxes, masks, class_ids, class_names, mask_threshold=0.0, scores=None,
 					  show_mask=True, show_bbox=True, colors=None, captions=None):
 	"""
 	boxes: [num_instance, (y1, x1, y2, x2, class_id)] in image coordinates.
@@ -116,12 +116,21 @@ def process_masked_image(image, boxes, masks, class_ids, class_names, scores=Non
 	for i in range(N):
 		
 		color = dcolors[i]
+		score = scores[i] if scores is not None else None
+		
+		# Bounding box
+		if not np.any(boxes[i]):
+			# Skip this instance. Has no bbox. Likely lost in image cropping.
+			continue
+		
+		if score != None:
+			if score < mask_threshold:
+				continue
 		
 		y1, x1, y2, x2 = boxes[i]
 		# Label
 		if not captions:
 			class_id = class_ids[i]
-			score = scores[i] if scores is not None else None
 			label = class_names[class_id]
 			x = random.randint(x1, (x1 + x2) // 2)
 			caption = "{} {:.3f}".format(label, score) if score else label
@@ -129,8 +138,6 @@ def process_masked_image(image, boxes, masks, class_ids, class_names, scores=Non
 		else:
 			caption = captions[i]
 			
-
-		
 		# Mask
 		mask = masks[:, :, i]
 		masked_image = visualize.apply_mask(masked_image, mask, color)
@@ -138,23 +145,16 @@ def process_masked_image(image, boxes, masks, class_ids, class_names, scores=Non
 		#modify only after the mask application
 		color = tuple([int(ch*255) for ch in color])
 		
-		# Bounding box
-		if not np.any(boxes[i]):
-			# Skip this instance. Has no bbox. Likely lost in image cropping.
-			continue
-		
 		cv2.rectangle(masked_image, (x1,y1), (x2,y2), color, 2)
-
-
 		cv2.putText(masked_image, caption, (x1,y1+8), font, 1, (255, 255, 255), 1, cv2.LINE_AA)
 
 	return masked_image	
 
 	
-def apply_masks(fig):
+def apply_masks(fig, mask_threshold=0.0):
 	results = model.detect([fig], verbose=0)
 	r = results[0]
-	masked_image = process_masked_image(fig, r['rois'], r['masks'], r['class_ids'], class_names , r['scores'])
+	masked_image = process_masked_image(fig, r['rois'], r['masks'], r['class_ids'], class_names, mask_threshold, r['scores'])
 	return masked_image
 
 
