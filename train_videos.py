@@ -196,6 +196,7 @@ with tf.Session() as sess:
 
     # LSTM part:
     rnn_cell = tf.contrib.rnn.BasicLSTMCell(lstm_hidden)
+    rnn_cell = tf.nn.rnn_cell.DropoutWrapper(rnn_cell, output_keep_prob=0.2)
     rnn_outputs, rnn_states = tf.contrib.rnn.static_rnn(rnn_cell, X_unstacked, dtype=tf.float32)
 
     # Output of the correct size:
