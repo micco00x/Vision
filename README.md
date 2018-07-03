@@ -49,15 +49,14 @@ in `dataset/activitynet/Frames`):
 python3 LSTM/splitDataset.py --framesfolder=dataset/activitynet/Frames
 ~~~~
 
-Train the model to recognize activites from videos (as before, considering
-the same path for the frames of the videos):
+Generate the .npz datasets that will be later used to train the LSTM:
 ~~~~
-python3 train_videos.py --train_dataset=dataset/activitynet/Frames/train.txt --val_dataset=dataset/activitynet/Frames/test.txt --model=weights/mask_rcnn_coco_0080.h5
+python3 generate_npz.py --dataset=dataset/activitynet/Frames/train.txt --model=weights/mask_rcnn_coco_0080.h5
+python3 generate_npz.py --dataset=dataset/activitynet/Frames/test.txt --model=weights/mask_rcnn_coco_0080.h5
 ~~~~
 
-Notice that after the first training the program generates a ``.npz`` file
-that stores the tensors used for the training. Hence, it is possible to train
-skipping the generation of the tensors:
+Train the LSTM that recognizes videos passing as datasets the .npz files
+generated in the previous step:
 ~~~~
-python3 train_videos.py --train_npz=dataset/activitynet/Frames/train.npz --val_npz=dataset/activitynet/Frames/val.npz
+python3 train_videos.py --train=dataset/activitynet/Frames/train.npz --test=dataset/activitynet/Frames/test.npz
 ~~~~
