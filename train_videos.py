@@ -39,7 +39,7 @@ class VideoClassifier:
         self.loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=self.prediction, labels=self.y_one_hot))
 
     def train(self,
-              videos, classes, val_videos, val_classes,
+              train_videos, train_classes, val_videos, val_classes,
               learning_rate, batch_size, epochs,
               tensorboard_folder,
               tensorboard_train_loss_tag="train_loss", tensorboard_train_accuracy_tag="train_accuracy",
@@ -64,7 +64,7 @@ class VideoClassifier:
 
             for epoch in range(epochs):
                 print("Epoch {}/{}:".format(epoch+1, epochs))
-                new_indices = np.random.randint(videos.shape[0], size=videos.shape[0])
+                new_indices = np.random.randint(train_videos.shape[0], size=train_videos.shape[0])
 
                 # Let mu_i = vloss for each iteration, let's say the iteration is N,
                 # bs is the batch_size of the current iteration,
@@ -80,12 +80,12 @@ class VideoClassifier:
                 tot_accuracy = 0
 
                 # Iterate through the train dataset using new_indices (random shuffle):
-                for idx in range(0, videos.shape[0], batch_size):
+                for idx in range(0, train_videos.shape[0], batch_size):
                     # Extract the following args.batch_size indices and perform a training step:
-                    L = min(idx+batch_size, videos.shape[0])
+                    L = min(idx+batch_size, train_videos.shape[0])
                     rand_idx = new_indices[idx:L]
                     minibatch_X = train_videos[rand_idx,:,:,:,:]
-                    minibatch_y = train_videos_y[rand_idx]
+                    minibatch_y = train_classes[rand_idx]
                     vloss, vaccuracy, bs, _ = sess.run([self.loss, accuracy, self.batch_size, train_step], feed_dict={self.X: minibatch_X, self.y: minibatch_y})
 
                     # Update tot_loss and tot_accuracy:
@@ -95,8 +95,8 @@ class VideoClassifier:
                     tot_accuracy = (batch_size * sum_accuracy + bs * vaccuracy) / (N * batch_size + bs)
                     sum_accuracy = sum_accuracy + vaccuracy
 
-                    print("Progress: {}/{} - {}: {:2.3} - {}: {:2.3}".format(L, videos.shape[0], tensorboard_train_loss_tag, tot_loss, tensorboard_train_accuracy_tag, tot_accuracy), end="\r")
-                print("Progress: {}/{} - {}: {:2.3} - {}: {:2.3}".format(videos.shape[0], videos.shape[0], tensorboard_train_loss_tag, tot_loss, tensorboard_train_accuracy_tag, tot_accuracy))
+                    print("Progress: {}/{} - {}: {:2.3} - {}: {:2.3}".format(L, train_videos.shape[0], tensorboard_train_loss_tag, tot_loss, tensorboard_train_accuracy_tag, tot_accuracy), end="\r")
+                print("Progress: {}/{} - {}: {:2.3} - {}: {:2.3}".format(train_videos.shape[0], train_videos.shape[0], tensorboard_train_loss_tag, tot_loss, tensorboard_train_accuracy_tag, tot_accuracy))
 
                 # Update tot_loss and tot_accuracy and log to TensorBoard:
                 # TODO: move this inside the graph.
@@ -116,8 +116,8 @@ class VideoClassifier:
                 for idx in range(0, val_videos.shape[0], batch_size):
                     # Extract the following args.batch_size indices and perform a training step:
                     L = min(idx+batch_size, val_videos.shape[0])
-                    minibatch_X = test_videos[idx:L,:,:,:,:]
-                    minibatch_y = test_videos_y[idx:L]
+                    minibatch_X = val_videos[idx:L,:,:,:,:]
+                    minibatch_y = val_classes[idx:L]
                     vloss, vaccuracy, bs = sess.run([self.loss, accuracy, self.batch_size], feed_dict={self.X: minibatch_X, self.y: minibatch_y})
 
                     # Update tot_loss and tot_accuracy:
@@ -137,52 +137,55 @@ class VideoClassifier:
                 summary = tf.Summary(value=[tf.Summary.Value(tag=tensorboard_test_accuracy_tag, simple_value=tot_accuracy)])
                 tensorboard_writer.add_summary(summary, epoch)
 
-# Parse arguments from command line:
-parser = argparse.ArgumentParser(description="Train a network to classify videos in activities")
-parser.add_argument("--train", help="Train .npz file that stores tensors used to train the network")
-parser.add_argument("--test", help="Test .npz file that stores tensors used to train the network")
-parser.add_argument("--logs", required=False,
-                    default=DEFAULT_LOGS_DIR,
-                    metavar="/path/to/logs/",
-                    help="Logs and checkpoints directory (default=logs)")
-parser.add_argument("--model", required="--dataset" in sys.argv,
-                    metavar="/path/to/weights.h5",
-                    help="Path to weights .h5 file")
-parser.add_argument("--batch_size", default=32, type=int, help="Size of the batch for the LSTM (default=32)")
-parser.add_argument("--learning_rate", default=1e-3, type=float, help="Learning rate for the RMSProp optimizer (default=1e-3)")
-parser.add_argument("--epochs", default=10, type=int, help="Number of epochs to train the LSTM (default=10)")
-parser.add_argument("--lstm_hidden", default=256, type=int, help="Size of the hidden layer for the LSTM")
-args = parser.parse_args()
+    #def _iterate_dataset(self):
 
-# Load tensors (train):
-npzfile = np.load(args.train)
-train_videos = npzfile["videos"]
-train_videos_y = npzfile["videos_y"]
+if __name__ == "__main__":
+    # Parse arguments from command line:
+    parser = argparse.ArgumentParser(description="Train a network to classify videos in activities")
+    parser.add_argument("--train", help="Train .npz file that stores tensors used to train the network")
+    parser.add_argument("--test", help="Test .npz file that stores tensors used to train the network")
+    parser.add_argument("--logs", required=False,
+                        default=DEFAULT_LOGS_DIR,
+                        metavar="/path/to/logs/",
+                        help="Logs and checkpoints directory (default=logs)")
+    parser.add_argument("--model", required="--dataset" in sys.argv,
+                        metavar="/path/to/weights.h5",
+                        help="Path to weights .h5 file")
+    parser.add_argument("--batch_size", default=32, type=int, help="Size of the batch for the LSTM (default=32)")
+    parser.add_argument("--learning_rate", default=1e-3, type=float, help="Learning rate for the RMSProp optimizer (default=1e-3)")
+    parser.add_argument("--epochs", default=10, type=int, help="Number of epochs to train the LSTM (default=10)")
+    parser.add_argument("--lstm_hidden", default=256, type=int, help="Size of the hidden layer for the LSTM")
+    args = parser.parse_args()
 
-# Load tensors (test):
-npzfile = np.load(args.test)
-test_videos = npzfile["videos"]
-test_videos_y = npzfile["videos_y"]
+    # Load tensors (train):
+    npzfile = np.load(args.train)
+    train_videos = npzfile["videos"]
+    train_classes = npzfile["videos_y"]
 
-# videos should be [num videos, num frames, width, height, channels],
-# videos_y should be [num_videos, ]:
-print(train_videos.shape)
-print(train_videos_y.shape)
-print(test_videos.shape)
-print(test_videos_y.shape)
+    # Load tensors (test):
+    npzfile = np.load(args.test)
+    test_videos = npzfile["videos"]
+    test_classes = npzfile["videos_y"]
 
-# Convert videos' frames from uint8 to float32, specifically from [0,255] to [0,1]:
-train_videos = train_videos.astype(np.float32) / 255
-test_videos = test_videos.astype(np.float32) / 255
-#print("Checking videos are in range [0,1]:", (0 <= videos).all() and (videos <= 1).all())
+    # videos should be [num videos, num frames, width, height, channels],
+    # classes should be [num_videos, ]:
+    print(train_videos.shape)
+    print(train_classes.shape)
+    print(test_videos.shape)
+    print(test_classes.shape)
 
-# LSTM hyperparameters:
-lstm_hidden = args.lstm_hidden
-num_classes = len(set(train_videos_y))
-learning_rate = args.learning_rate
-epochs = args.epochs
+    # Convert videos' frames from uint8 to float32, specifically from [0,255] to [0,1]:
+    train_videos = train_videos.astype(np.float32) / 255
+    test_videos = test_videos.astype(np.float32) / 255
+    #print("Checking videos are in range [0,1]:", (0 <= videos).all() and (videos <= 1).all())
 
-videoClassifier = VideoClassifier(lstm_hidden, num_classes, [None] + list(train_videos.shape[1:]), [None] + list(train_videos_y.shape[1:]))
-videoClassifier.train(train_videos, train_videos_y, test_videos, test_videos_y,
-                      args.learning_rate, args.batch_size, args.epochs,
-                      "logs/lstm" + time.strftime("%Y%m%dT%H%M"))
+    # LSTM hyperparameters:
+    lstm_hidden = args.lstm_hidden
+    num_classes = len(set(train_classes))
+    learning_rate = args.learning_rate
+    epochs = args.epochs
+
+    videoClassifier = VideoClassifier(lstm_hidden, num_classes, [None] + list(train_videos.shape[1:]), [None] + list(train_classes.shape[1:]))
+    videoClassifier.train(train_videos, train_classes, test_videos, test_classes,
+                          args.learning_rate, args.batch_size, args.epochs,
+                          "logs/lstm" + time.strftime("%Y%m%dT%H%M"))
