@@ -38,11 +38,10 @@ class VideoClassifier:
     # Train the LSTM on the dataset:
     def train(self,
               train_videos, train_classes, val_videos, val_classes,
-              learning_rate, batch_size, epochs,
+              optimizer, batch_size, epochs,
               tensorboard_folder, sess, verbose=True):
 
-        # Optimizer optimizer:
-        optimizer = tf.train.RMSPropOptimizer(learning_rate=learning_rate)
+        # Optimize the loss function:
         self.train_step = optimizer.minimize(self.loss)
 
         # TensorBoard:
