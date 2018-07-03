@@ -1,7 +1,7 @@
+import tensorflow as tf
 import numpy as np
 import argparse
 import sys
-#import os
 import time
 
 import VideoClassifier
@@ -54,7 +54,8 @@ if __name__ == "__main__":
     learning_rate = args.learning_rate
     epochs = args.epochs
 
-    videoClassifier = VideoClassifier.VideoClassifier(lstm_hidden, num_classes, [None] + list(train_videos.shape[1:]), [None] + list(train_classes.shape[1:]))
-    videoClassifier.train(train_videos, train_classes, test_videos, test_classes,
-                          args.learning_rate, args.batch_size, args.epochs,
-                          "logs/lstm" + time.strftime("%Y%m%dT%H%M"))
+    with tf.Session() as sess:
+        videoClassifier = VideoClassifier.VideoClassifier(lstm_hidden, num_classes, [None] + list(train_videos.shape[1:]), [None] + list(train_classes.shape[1:]))
+        videoClassifier.train(train_videos, train_classes, test_videos, test_classes,
+                              args.learning_rate, args.batch_size, args.epochs,
+                              "logs/lstm" + time.strftime("%Y%m%dT%H%M"), sess)
