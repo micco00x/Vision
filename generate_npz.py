@@ -78,7 +78,7 @@ if __name__ == '__main__':
     # Open the dataset with the list of path to video folders:
     with open(dataset_filename) as dataset_file:
         # Go through each video folder:
-        video_folders = dataset_file.readlines()[:1]
+        video_folders = dataset_file.readlines()
         for idx, video_folder in enumerate(video_folders):
 
             print("Progress: {:2.1%}".format(idx / len(video_folders)), end="\r")
