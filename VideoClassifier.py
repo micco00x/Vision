@@ -109,7 +109,7 @@ class VideoClassifier:
             minibatch_y = classes[rand_idx]
 
             # Perform a training step:
-            if mode == "train:":
+            if mode == "train":
                 vloss, vaccuracy, bs, _ = sess.run([self.loss, self.accuracy, self.batch_size, self.train_step], feed_dict={self.X: minibatch_X, self.y: minibatch_y})
             else:
                 vloss, vaccuracy, bs = sess.run([self.loss, self.accuracy, self.batch_size], feed_dict={self.X: minibatch_X, self.y: minibatch_y})
