@@ -10,6 +10,13 @@ Initialize submodules:
 git submodule update --init
 ~~~~
 
+Create folders:
+~~~~
+mkdir images
+mkdir logs
+mkdir weights
+~~~~
+
 Generate the dataset:
 ~~~~
 python3 generate_dataset.py
