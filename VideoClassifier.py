@@ -4,7 +4,7 @@ import numpy as np
 class VideoClassifier:
     # Define the computational graph with lstm_hidden nodes for the LSTM,
     # num_classes for the softmax and shape for the inputs X (videos), y (classes):
-    def __init__(self, lstm_hidden, num_classes, videos_shape, classes_shape):
+    def __init__(self, lstm_hidden, num_classes, videos_shape, classes_shape, tensorboard_folder, sess):
         # Input (videos' frames) and output (indices) of the network:
         self.X = tf.placeholder(tf.float32, shape=videos_shape)
         self.y = tf.placeholder(tf.uint8, shape=classes_shape)
@@ -35,20 +35,21 @@ class VideoClassifier:
         correct_pred = tf.equal(tf.argmax(self.prediction, axis=1), tf.argmax(self.y_one_hot, axis=1))
         self.accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
+        # TensorBoard:
+        self.tensorboard_writer = tf.summary.FileWriter(tensorboard_folder, sess.graph)
+
+        # Initialize the graph:
+        tf.global_variables_initializer().run()
+
     # Train the LSTM on the dataset:
     def train(self,
               train_videos, train_classes, val_videos, val_classes,
               optimizer, batch_size, epochs,
-              tensorboard_folder, sess, verbose=True):
+              sess, verbose=True):
 
         # Optimize the loss function:
         self.train_step = optimizer.minimize(self.loss)
-
-        # TensorBoard:
-        tensorboard_writer = tf.summary.FileWriter(tensorboard_folder, sess.graph)
-
-        # Initialize the graph:
-        tf.global_variables_initializer().run()
+        sess.run(tf.variables_initializer(optimizer.variables()))
 
         for epoch in range(epochs):
             print("Epoch {}/{}:".format(epoch+1, epochs))
@@ -57,17 +58,17 @@ class VideoClassifier:
             tot_loss, tot_accuracy = self._iterate_dataset("train", train_videos, train_classes, batch_size, sess, verbose)
             # TODO: move this inside the graph.
             summary = tf.Summary(value=[tf.Summary.Value(tag="train_loss", simple_value=tot_loss)])
-            tensorboard_writer.add_summary(summary, epoch)
+            self.tensorboard_writer.add_summary(summary, epoch)
             summary = tf.Summary(value=[tf.Summary.Value(tag="train_accuracy", simple_value=tot_accuracy)])
-            tensorboard_writer.add_summary(summary, epoch)
+            self.tensorboard_writer.add_summary(summary, epoch)
 
             # Update tot_loss and tot_accuracy and log to TensorBoard (validation set):
             tot_loss, tot_accuracy = self._iterate_dataset("eval", val_videos, val_classes, batch_size, sess, verbose)
             # TODO: move this inside the graph.
             summary = tf.Summary(value=[tf.Summary.Value(tag="val_loss", simple_value=tot_loss)])
-            tensorboard_writer.add_summary(summary, epoch)
+            self.tensorboard_writer.add_summary(summary, epoch)
             summary = tf.Summary(value=[tf.Summary.Value(tag="val_accuracy", simple_value=tot_accuracy)])
-            tensorboard_writer.add_summary(summary, epoch)
+            self.tensorboard_writer.add_summary(summary, epoch)
 
     def _iterate_dataset(self, mode, videos, classes, batch_size, sess, verbose):
 
@@ -105,7 +106,7 @@ class VideoClassifier:
             else:
                 rand_idx = range(idx, L)
 
-            minibatch_X = videos[rand_idx,:,:,:,:]
+            minibatch_X = videos[rand_idx,:]
             minibatch_y = classes[rand_idx]
 
             # Perform a training step:

@@ -55,7 +55,10 @@ if __name__ == "__main__":
     epochs = args.epochs
 
     with tf.Session() as sess:
-        videoClassifier = VideoClassifier.VideoClassifier(lstm_hidden, num_classes, [None] + list(train_videos.shape[1:]), [None] + list(train_classes.shape[1:]))
+        videoClassifier = VideoClassifier.VideoClassifier(lstm_hidden, num_classes,
+                                                          [None] + list(train_videos.shape[1:]),
+                                                          [None] + list(train_classes.shape[1:]),
+                                                          "logs/lstm" + time.strftime("%Y%m%dT%H%M"), sess)
         videoClassifier.train(train_videos, train_classes, test_videos, test_classes,
-                              tf.train.RMSPropOptimizer(learning_rate=args.learning_rate), args.batch_size, args.epochs,
-                              "logs/lstm" + time.strftime("%Y%m%dT%H%M"), sess)
+                              tf.train.RMSPropOptimizer(learning_rate=args.learning_rate),
+                              args.batch_size, args.epochs, sess)
