@@ -43,12 +43,14 @@ class VideoClassifier:
         self.accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
         # TensorBoard:
-        self.tensorboard_writer = tf.summary.FileWriter(tensorboard_folder, sess.graph)
+        if tensorboard_folder:
+            self.tensorboard_writer = tf.summary.FileWriter(tensorboard_folder, sess.graph)
 
         # Checkpoint folder:
-        self.checkpoint_folder = checkpoint_folder
-        if not os.path.exists(self.checkpoint_folder):
-            os.makedirs(self.checkpoint_folder)
+        if checkpoint_folder:
+            self.checkpoint_folder = checkpoint_folder
+            if not os.path.exists(self.checkpoint_folder):
+                os.makedirs(self.checkpoint_folder)
 
         # Initialize the graph:
         tf.global_variables_initializer().run()
