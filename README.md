@@ -67,3 +67,9 @@ generated in the previous step:
 ~~~~
 python3 train_videos.py --train=dataset/activitynet/Frames/train.npz --test=dataset/activitynet/Frames/test.npz
 ~~~~
+
+Create a confusion matrix to study the behaviour of the LSTM (be sure to use the
+same number of hidden layers for the LSTM):
+~~~~
+python3 eval_videos.py --dataset=dataset/activitynet/Frames/test_masks.npz --checkpoint=PATH_TO_CHECKPOINT
+~~~~
