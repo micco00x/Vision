@@ -58,7 +58,8 @@ if __name__ == "__main__":
         videoClassifier = VideoClassifier.VideoClassifier(lstm_hidden, num_classes,
                                                           [None] + list(train_videos.shape[1:]),
                                                           [None] + list(train_classes.shape[1:]),
-                                                          args.logs + "/lstm" + T, os.path.join("weights/lstm", T),
+                                                          os.path.join(args.logs, "lstm" + T),
+                                                          os.path.join("weights", "lstm" + T),
                                                           sess)
         videoClassifier.train(train_videos, train_classes, test_videos, test_classes,
                               tf.train.RMSPropOptimizer(learning_rate=args.learning_rate),

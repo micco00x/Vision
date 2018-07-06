@@ -65,7 +65,7 @@ python3 generate_npz.py --dataset=dataset/activitynet/Frames/test.txt --model=we
 Train the LSTM that recognizes videos passing as datasets the .npz files
 generated in the previous step:
 ~~~~
-python3 train_videos.py --train=dataset/activitynet/Frames/train.npz --test=dataset/activitynet/Frames/test.npz
+python3 train_videos.py --train=dataset/activitynet/Frames/train_masks.npz --test=dataset/activitynet/Frames/test_masks.npz
 ~~~~
 
 Create a confusion matrix to study the behaviour of the LSTM (be sure to use the
