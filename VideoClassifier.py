@@ -70,6 +70,14 @@ class VideoClassifier:
             summary = tf.Summary(value=[tf.Summary.Value(tag="val_accuracy", simple_value=tot_accuracy)])
             self.tensorboard_writer.add_summary(summary, epoch)
 
+    # Predict a video of shape [num frames, ...]
+    def predict(self, video, sess):
+        return sess.run(self.prediction, feed_dict={self.X: [video]})
+
+    # Predict a batch of videos of shape [batch_size, num frames, ...]
+    def predict_batch(self, videos, sess):
+        return sess.run(self.prediction, feed_dict={self.X: videos})
+
     def _iterate_dataset(self, mode, videos, classes, batch_size, sess, verbose):
 
         if mode == "train":
