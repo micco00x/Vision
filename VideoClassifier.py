@@ -5,9 +5,7 @@ import os
 class VideoClassifier:
     # Define the computational graph with lstm_hidden nodes for the LSTM,
     # num_classes for the softmax and shape for the inputs X (videos), y (classes):
-    def __init__(self, lstm_hidden, num_classes, videos_shape, classes_shape,
-                 tensorboard_folder, checkpoint_folder,
-                 sess):
+    def __init__(self, lstm_hidden, num_classes, videos_shape, classes_shape):
 
         # Count number of total epochs in case of multiple trainings:
         self.tot_epochs = 0
@@ -42,18 +40,18 @@ class VideoClassifier:
         correct_pred = tf.equal(tf.argmax(self.prediction, axis=1), tf.argmax(self.y_one_hot, axis=1))
         self.accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
-        # TensorBoard:
-        if tensorboard_folder:
-            self.tensorboard_writer = tf.summary.FileWriter(tensorboard_folder, sess.graph)
-
-        # Checkpoint folder:
-        if checkpoint_folder:
-            self.checkpoint_folder = checkpoint_folder
-            if not os.path.exists(self.checkpoint_folder):
-                os.makedirs(self.checkpoint_folder)
-
         # Initialize the graph:
         tf.global_variables_initializer().run()
+
+    # TensorBoard:
+    def set_tensorboard_folder(self, tensorboard_folder, sess):
+        self.tensorboard_writer = tf.summary.FileWriter(tensorboard_folder, sess.graph)
+
+    # Checkpoint folder:
+    def set_checkpoint_folder(self, checkpoint_folder):
+        self.checkpoint_folder = checkpoint_folder
+        if not os.path.exists(self.checkpoint_folder):
+            os.makedirs(self.checkpoint_folder)
 
     # Train the LSTM on the dataset:
     def train(self,
@@ -72,22 +70,26 @@ class VideoClassifier:
 
             # Update tot_loss and tot_accuracy and log to TensorBoard (training set):
             tot_loss, tot_accuracy = self._iterate_dataset("train", train_videos, train_classes, batch_size, sess, verbose)
-            # TODO: move this inside the graph.
-            summary = tf.Summary(value=[tf.Summary.Value(tag="train_loss", simple_value=tot_loss)])
-            self.tensorboard_writer.add_summary(summary, self.tot_epochs)
-            summary = tf.Summary(value=[tf.Summary.Value(tag="train_accuracy", simple_value=tot_accuracy)])
-            self.tensorboard_writer.add_summary(summary, self.tot_epochs)
+
+            if self.tensorboard_writer:
+                # TODO: move this inside the graph.
+                summary = tf.Summary(value=[tf.Summary.Value(tag="train_loss", simple_value=tot_loss)])
+                self.tensorboard_writer.add_summary(summary, self.tot_epochs)
+                summary = tf.Summary(value=[tf.Summary.Value(tag="train_accuracy", simple_value=tot_accuracy)])
+                self.tensorboard_writer.add_summary(summary, self.tot_epochs)
 
             # Update tot_loss and tot_accuracy and log to TensorBoard (validation set):
             tot_loss, tot_accuracy = self._iterate_dataset("eval", val_videos, val_classes, batch_size, sess, verbose)
-            # TODO: move this inside the graph.
-            summary = tf.Summary(value=[tf.Summary.Value(tag="val_loss", simple_value=tot_loss)])
-            self.tensorboard_writer.add_summary(summary, self.tot_epochs)
-            summary = tf.Summary(value=[tf.Summary.Value(tag="val_accuracy", simple_value=tot_accuracy)])
-            self.tensorboard_writer.add_summary(summary, self.tot_epochs)
+
+            if self.tensorboard_writer:
+                # TODO: move this inside the graph.
+                summary = tf.Summary(value=[tf.Summary.Value(tag="val_loss", simple_value=tot_loss)])
+                self.tensorboard_writer.add_summary(summary, self.tot_epochs)
+                summary = tf.Summary(value=[tf.Summary.Value(tag="val_accuracy", simple_value=tot_accuracy)])
+                self.tensorboard_writer.add_summary(summary, self.tot_epochs)
 
             # Save checkpoint:
-            if self.tot_epochs % save_checkpoint == 0:
+            if self.checkpoint_folder and self.tot_epochs % save_checkpoint == 0:
                 self.save(os.path.join(self.checkpoint_folder, "epoch_" + str(self.tot_epochs) + ".ckpt"), sess)
 
     # Predict a video of shape [num frames, ...]

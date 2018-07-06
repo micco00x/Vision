@@ -72,8 +72,7 @@ if __name__ == "__main__":
     with tf.Session() as sess:
         videoClassifier = VideoClassifier.VideoClassifier(args.lstm_hidden, len(set(classes)),
                                                           [None] + list(videos.shape[1:]),
-                                                          [None] + list(classes.shape[1:]),
-                                                          None, None, sess)
+                                                          [None] + list(classes.shape[1:]))
         videoClassifier.load(args.checkpoint, sess)
 
         print("Generating the confusion matrix...")
