@@ -1,10 +1,17 @@
 import tensorflow as tf
 import numpy as np
+import os
 
 class VideoClassifier:
     # Define the computational graph with lstm_hidden nodes for the LSTM,
     # num_classes for the softmax and shape for the inputs X (videos), y (classes):
-    def __init__(self, lstm_hidden, num_classes, videos_shape, classes_shape, tensorboard_folder, sess):
+    def __init__(self, lstm_hidden, num_classes, videos_shape, classes_shape,
+                 tensorboard_folder, checkpoint_folder,
+                 sess):
+
+        # Count number of total epochs in case of multiple trainings:
+        self.tot_epochs = 0
+
         # Input (videos' frames) and output (indices) of the network:
         self.X = tf.placeholder(tf.float32, shape=videos_shape)
         self.y = tf.placeholder(tf.uint8, shape=classes_shape)
@@ -38,6 +45,11 @@ class VideoClassifier:
         # TensorBoard:
         self.tensorboard_writer = tf.summary.FileWriter(tensorboard_folder, sess.graph)
 
+        # Checkpoint folder:
+        self.checkpoint_folder = checkpoint_folder
+        if not os.path.exists(self.checkpoint_folder):
+            os.makedirs(self.checkpoint_folder)
+
         # Initialize the graph:
         tf.global_variables_initializer().run()
 
@@ -45,30 +57,36 @@ class VideoClassifier:
     def train(self,
               train_videos, train_classes, val_videos, val_classes,
               optimizer, batch_size, epochs,
-              sess, verbose=True):
+              sess, verbose=True, save_checkpoint=10):
 
         # Optimize the loss function:
         self.train_step = optimizer.minimize(self.loss)
         sess.run(tf.variables_initializer(optimizer.variables()))
 
-        for epoch in range(epochs):
-            print("Epoch {}/{}:".format(epoch+1, epochs))
+        #for epoch in range(epochs):
+        while self.tot_epochs < epochs:
+            self.tot_epochs += 1
+            print("Epoch {}/{}:".format(self.tot_epochs, epochs))
 
             # Update tot_loss and tot_accuracy and log to TensorBoard (training set):
             tot_loss, tot_accuracy = self._iterate_dataset("train", train_videos, train_classes, batch_size, sess, verbose)
             # TODO: move this inside the graph.
             summary = tf.Summary(value=[tf.Summary.Value(tag="train_loss", simple_value=tot_loss)])
-            self.tensorboard_writer.add_summary(summary, epoch)
+            self.tensorboard_writer.add_summary(summary, self.tot_epochs)
             summary = tf.Summary(value=[tf.Summary.Value(tag="train_accuracy", simple_value=tot_accuracy)])
-            self.tensorboard_writer.add_summary(summary, epoch)
+            self.tensorboard_writer.add_summary(summary, self.tot_epochs)
 
             # Update tot_loss and tot_accuracy and log to TensorBoard (validation set):
             tot_loss, tot_accuracy = self._iterate_dataset("eval", val_videos, val_classes, batch_size, sess, verbose)
             # TODO: move this inside the graph.
             summary = tf.Summary(value=[tf.Summary.Value(tag="val_loss", simple_value=tot_loss)])
-            self.tensorboard_writer.add_summary(summary, epoch)
+            self.tensorboard_writer.add_summary(summary, self.tot_epochs)
             summary = tf.Summary(value=[tf.Summary.Value(tag="val_accuracy", simple_value=tot_accuracy)])
-            self.tensorboard_writer.add_summary(summary, epoch)
+            self.tensorboard_writer.add_summary(summary, self.tot_epochs)
+
+            # Save checkpoint:
+            if self.tot_epochs % save_checkpoint == 0:
+                self.save(os.path.join(self.checkpoint_folder, "epoch_" + str(self.tot_epochs) + ".ckpt"), sess)
 
     # Predict a video of shape [num frames, ...]
     def predict(self, video, sess):
@@ -77,6 +95,16 @@ class VideoClassifier:
     # Predict a batch of videos of shape [batch_size, num frames, ...]
     def predict_batch(self, videos, sess):
         return sess.run(self.prediction, feed_dict={self.X: videos})
+
+    # Save the model specifying a path:
+    def save(self, path, sess):
+        saver = tf.train.Saver()
+        saver.save(sess, path)
+
+    # Load the model specifying a path:
+    def load(self, path, sess):
+        saver = tf.train.Saver()
+        saver.restore(sess, path)
 
     def _iterate_dataset(self, mode, videos, classes, batch_size, sess, verbose):
 
