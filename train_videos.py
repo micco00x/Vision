@@ -12,8 +12,8 @@ DEFAULT_LOGS_DIR = "logs"
 if __name__ == "__main__":
     # Parse arguments from command line:
     parser = argparse.ArgumentParser(description="Train a network to classify videos in activities")
-    parser.add_argument("--train", help="Train .npz file that stores tensors used to train the network")
-    parser.add_argument("--test", help="Test .npz file that stores tensors used to train the network")
+    parser.add_argument("--train", required=True, help="Train .npz file that stores tensors used to train the network")
+    parser.add_argument("--test", required=True, help="Test .npz file that stores tensors used to train the network")
     parser.add_argument("--logs", required=False,
                         default=DEFAULT_LOGS_DIR,
                         metavar="/path/to/logs/",
