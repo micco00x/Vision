@@ -15,4 +15,7 @@ if __name__ == "__main__":
             if v.tag == args.tag:
                 tag_value_list.append((e.step, v.simple_value))
 
-    print(tag_value_list)
+    # Print in LaTeX format:
+    for value in tag_value_list:
+        print(value, end=" ")
+    print("")
