@@ -221,7 +221,7 @@ without going through Mask R-CNN again.
 The problem is, hence, reduced to training a LSTM. Multiple
 experiments have been performed on the features extracted
 from Mask R-CNN, all summarized in table
-\ref{table:lstm-experiments}. In particular the trainings
+\ref{table:lstm-experiments}. In particular, the trainings
 focused on the number of hidden nodes for the LSTM and the
 type of features extracted. The number of hidden nodes
 varied from 64 to 1024. Three types of datasets have
@@ -277,9 +277,10 @@ train the network and the number of hidden nodes in the
 LSTM. More in detail, each neural network is trained
 for two stages that differs in the value of the learning
 rate and the number of epochs. All the experiments used
+the optimizer RMSProp with
 a learning rate of $10^{-3}$ for the first stage and $10^{-4}$
 for the second stage. The number of epochs have been chosen
-so that there is no overfitting in the test set.
+so that there is no overfitting in the loss on the test set.
 
 Figures \ref{fig:train-accuracy-masks} and
 \ref{fig:test-accuracy-masks} show how the accuracy changes 
@@ -293,8 +294,10 @@ set. The same thing
 applies when using both masks and the count of the objects
 in each frame (figures \ref{fig:train-accuracy-masks+count} and
 \ref{fig:test-accuracy-masks+count}).
-For this second experiment the LSTM manages
-to obtain slightly better results in the test set.
+For this second experiment, the LSTM manages
+to obtain slightly better results in the test set, meaning
+that the network is learning to exploit the information
+regarding the number of the objects.
 When using only the count of the objects (figures
 \ref{fig:train-accuracy-count} and
 \ref{fig:test-accuracy-count}) the networks manage to perform
