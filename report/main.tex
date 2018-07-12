@@ -266,7 +266,7 @@ The structure of the network is pretty simple. It consists
 of a LSTM followed by a dropout layer (with probability 0.2)
 that aims to avoid overfitting. The LSTM considers a timestep
 of 40 and outputs a softmax over the classes of the videos
-contained in Gymnastics. Since the LSTM requires a 1D vector
+contained in Gymnastics. Since the LSTM requires a vector
 as input, the masks are vectorized before being fed to the
 LSTM itself. This makes the masks to lose the spatiality
 of the data, making it harder to train the network.
@@ -328,7 +328,7 @@ through Mask R-CNN more often.
 
 The structure of the network could be improved by considering
 the spatial relations of the frames. In fact, since the LSTM
-requires an input a 1D vector, all the frames have been
+requires an input a vector, all the frames have been
 vectorized. One possibility is to replace the LSTM
 with a Grid LSTM\cite{Kalchbrenner2015GridLS}, that
 accept as input a tensor of any dimension, like in the
@@ -365,7 +365,7 @@ case of the frames.
 	    the number of objects in the frame itself, Masks
 	    represents each frame as a semantic map,
 	    Masks+Count combines the two. Note that since the
-	    LSTM requires a 1D vector as input, all the datasets
+	    LSTM requires a vector as input, all the datasets
 	    have been vectorized before being fed to the LSTM.
 	    Note that even if the number epochs is higher
 	    for the datase Count, it takes less time to train
